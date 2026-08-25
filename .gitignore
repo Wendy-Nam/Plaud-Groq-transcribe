@@ -1,0 +1,16 @@
+# 개인정보·환경변수 보호
+.env
+*.env
+token*.json
+credentials*.json
+*.key
+*.pem
+
+# 전사 결과·오디오
+transcripts/
+*.mp3
+processed.txt
+
+# 로컬 작업 파일
+*.tmp
+.git/
