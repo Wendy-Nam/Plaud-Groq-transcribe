@@ -28,6 +28,9 @@ python3 groq_transcribe.py meeting.mp3
 
 # Accuracy-first + custom output path
 python3 groq_transcribe.py lecture.mp3 ./out/lecture.txt whisper-large-v3
+
+# Non-Korean audio (language defaults to ko)
+python3 groq_transcribe.py interview.mp3 --language=en
 ```
 
 Output is saved to `transcripts/<basename>.txt`.
@@ -51,7 +54,8 @@ Transcript text (.txt) → (optional) Google Drive
 1. **Presigned URL poisoning** — Plaud URLs exceed 1,700 chars (mostly `X-Amz-Security-Token`). Pasting them by hand into code breaks one character → HTTP 400/403. **Fix**: save URL to a file, download with `curl -sL -o out.mp3 "$(cat url.txt)"`, verify `head -c3` returns `ID3`.
 2. **Groq `file is empty`** — retry after 1–2 min, split files >15MB, max 3 attempts.
 3. **Groq 403 `error code: 1010`** = Cloudflare blocking default `urllib` UA → set a browser User-Agent (bundled in the script).
-4. **25MB Groq limit** — Plaud ~0.23MB/min → ~109 min/file cap. Split with `ffmpeg -c copy -segment_time 1200` (20-min chunks).
+4. **25MB Groq limit** — Plaud ~0.23MB/min → ~109 min/file cap. Split with `ffmpeg -c copy -segment_time 1200` (20-min chunks). Files over 24MB are rejected locally with that command printed, so you never waste the upload.
+5. **Silent failures** — the script used to exit 0 even when Groq returned an error. It now exits 1 on HTTP errors, oversized input, or an empty transcript, so `if ! python3 groq_transcribe.py x.mp3; then ...` works in cron/CI.
 
 ---
 

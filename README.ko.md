@@ -59,6 +59,12 @@ python3 groq_transcribe.py meeting.mp3
 python3 groq_transcribe.py lecture.mp3 ./out/lecture.txt whisper-large-v3
 ```
 
+### 영어 등 다른 언어 오디오
+```bash
+python3 groq_transcribe.py interview.mp3 --language=en
+# 또는 GROQ_LANGUAGE=en python3 groq_transcribe.py interview.mp3
+```
+
 ### 실행 예시 (실제 입출력)
 
 입력: `/audio/coaching1.mp3` (4.6MB / 14분)
@@ -102,6 +108,11 @@ Groq 세션 저하 또는 15MB 초과 파일에서 발생.
 ### 4. 25MB Groq 제한
 Plaud 코드 약 0.23MB/분 → 파일당 약 109분 한계.
 → `ffmpeg -c copy -segment_time 1200`로 20분 청크 분할.
+→ 24MB를 넘는 파일은 업로드 전에 로컬에서 거부하고 위 분할 명령을 그대로 출력합니다.
+
+### 5. 조용한 실패 (종료 코드)
+예전 버전은 Groq 오류·빈 응답에도 **종료 코드 0**을 반환해 크론·CI가 실패를 못 잡았습니다.
+→ 지금은 HTTP 오류, 24MB 초과, 빈 전사 결과에서 **종료 코드 1**을 반환합니다. `if ! python3 groq_transcribe.py x.mp3; then ...` 로 감지하세요.
 
 ---
 
