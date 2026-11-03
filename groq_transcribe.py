@@ -17,6 +17,8 @@ Exit status:
 import os, sys, json, urllib.request, urllib.error
 
 API_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+MAX_MB = 24  # Groq 단일 요청 한도 25MB, 여유 1MB
+
 CONTENT_TYPES = {
     "mp3": "audio/mpeg", "mpga": "audio/mpeg", "m4a": "audio/mp4",
     "mp4": "audio/mp4", "wav": "audio/wav", "ogg": "audio/ogg",
@@ -32,6 +34,16 @@ def transcribe(audio_path, out_path=None, model=None, language=None):
         raise SystemExit("ERR: GROQ_API_KEY 환경변수 없음")
     if not os.path.exists(audio_path):
         raise SystemExit(f"ERR: 오디오 없음 {audio_path}")
+
+    size_mb = os.path.getsize(audio_path) / (1024 * 1024)
+    if size_mb > MAX_MB:
+        stem = os.path.splitext(os.path.basename(audio_path))[0]
+        print(f"ERR: {size_mb:.1f}MB — Groq 단일 요청 한도는 25MB (권장 {MAX_MB}MB 이하)")
+        print("먼저 분할한 뒤 각 청크를 전사하세요:")
+        print(f"  ffmpeg -i '{audio_path}' -c copy -segment_time 1200 "
+              f"-f segment 'transcripts/{stem}_%03d.mp3'")
+        print(f"  for f in transcripts/{stem}_*.mp3; do python3 groq_transcribe.py \"$f\"; done")
+        return None
 
     fbytes = open(audio_path, "rb").read()
     print(f"오디오 크기: {len(fbytes)} bytes")
