@@ -55,7 +55,7 @@ flowchart LR
     B --> C["MP3 on disk<br/>head -c3 shows ID3"]
     C --> D{"File over 24 MB?"}
     D -- no --> E["groq_transcribe.py"]
-    D -- yes --> S["ffmpeg -c copy<br/>-segment_time 1200"]
+    D -- yes --> S["ffmpeg -c copy<br/>-segment_time 900"]
     S --> E
     E --> F["Groq Whisper<br/>whisper-large-v3-turbo"]
     F --> G["transcripts/*.txt"]
@@ -69,9 +69,9 @@ Groq downloads the file and returns JSON; the script writes plain text and stops
 ## Common pitfalls (solved)
 
 1. **Presigned URL poisoning** — Plaud URLs exceed 1,700 chars (mostly `X-Amz-Security-Token`). Pasting them by hand into code breaks one character → HTTP 400/403. **Fix**: save URL to a file, download with `curl -sL -o out.mp3 "$(cat url.txt)"`, verify `head -c3` returns `ID3`.
-2. **Groq `file is empty`** — retry after 1–2 min, split files >15MB, max 3 attempts.
+2. **Groq `file is empty`** — retry after 1–2 min, max 3 attempts; if it repeats, split the file. Groq starts degrading well before its hard size limit, so anything past ~15 MB is worth splitting.
 3. **Groq 403 `error code: 1010`** = Cloudflare blocking default `urllib` UA → set a browser User-Agent (bundled in the script).
-4. **25MB Groq limit** — Plaud ~0.23MB/min → ~109 min/file cap. Split with `ffmpeg -c copy -segment_time 1200` (20-min chunks). Files over 24MB are rejected locally with that command printed, so you never waste the upload.
+4. **25MB Groq limit** — Plaud ~0.23MB/min → ~109 min/file cap. Split with `ffmpeg -c copy -segment_time 900` (15-min chunks), keeping the source extension: `-c copy` into a different container fails. Files at or over 24 MB are rejected locally before upload, and the script prints the exact split command, so you never waste a request.
 5. **Silent failures** — the script used to exit 0 even when Groq returned an error. It now exits 1 on HTTP errors, oversized input, or an empty transcript, so `if ! python3 groq_transcribe.py x.mp3; then ...` works in cron/CI.
 
 ---

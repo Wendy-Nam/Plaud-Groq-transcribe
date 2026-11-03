@@ -86,6 +86,30 @@ class TranscribeTests(unittest.TestCase):
         self.assertIn(b'name="language"', body)
         self.assertIn(b"\r\n\r\nen\r\n", body)
 
+    def test_empty_language_omits_the_field(self):
+        body = self._sent_body("d.mp3", language="")
+        self.assertNotIn(b'name="language"', body)
+
+    def test_cli_exits_one_on_http_error(self):
+        """The PR's headline fix: a Groq rejection must not look like success."""
+        stub_dir = os.path.join(self.tmp.name, "stub")
+        os.makedirs(stub_dir, exist_ok=True)
+        with open(os.path.join(stub_dir, "sitecustomize.py"), "w", encoding="utf-8") as f:
+            f.write(
+                "import io, urllib.request, urllib.error\n"
+                "def _boom(*a, **k):\n"
+                "    raise urllib.error.HTTPError('https://api.groq.com', 400, 'Bad Request', {},\n"
+                "                                 io.BytesIO(b'{\"error\":\"bad request\"}'))\n"
+                "urllib.request.urlopen = _boom\n"
+            )
+        proc = subprocess.run(
+            [sys.executable, os.path.join(ROOT, "groq_transcribe.py"), self.audio, self.out],
+            capture_output=True, text=True, cwd=self.tmp.name,
+            env={**os.environ, "GROQ_API_KEY": "gsk_test_dummy", "PYTHONPATH": stub_dir})
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("HTTP 400", proc.stdout)
+        self.assertFalse(os.path.exists(self.out))
+
     def test_cli_exits_one_when_audio_missing(self):
         proc = subprocess.run(
             [sys.executable, os.path.join(ROOT, "groq_transcribe.py"),

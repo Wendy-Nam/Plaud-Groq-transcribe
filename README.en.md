@@ -36,7 +36,7 @@ flowchart LR
     B --> C["MP3 on disk<br/>head -c3 = ID3"]
     C --> D{"File over 24 MB?"}
     D -- no --> E["groq_transcribe.py"]
-    D -- yes --> S["ffmpeg -c copy<br/>-segment_time 1200"]
+    D -- yes --> S["ffmpeg -c copy<br/>-segment_time 900"]
     S --> E
     E --> F["Groq Whisper<br/>whisper-large-v3-turbo"]
     F --> G["transcripts/*.txt"]
@@ -115,15 +115,15 @@ Plaud presigned URLs are **1,700+ characters** (mostly the `X-Amz-Security-Token
 3. Verify with `head -c3 out.mp3` → `ID3` is good; `<?xml`/`<Error>` means corrupted URL.
 
 ### 2. Groq `file is empty` (intermittent)
-Caused by Groq session degradation or files >15MB.
-→ Wait 1–2 min and retry; split files >15MB into 10–15 min chunks; max 3 attempts.
+Caused by Groq session degradation, or by inputs that are large relative to the model's sweet spot.
+→ Wait 1–2 min and retry (max 3 attempts); if it repeats, split into 10–15 min chunks.
 
 ### 3. Groq 403 `error code: 1010` = Cloudflare UA block
 The audio-upload endpoint blocks the default `urllib` User-Agent. → Set a browser User-Agent header (bundled in this script).
 
 ### 4. 25MB Groq limit
 Plaud codec ≈ 0.23MB/min → ~109 min/file cap.
-→ Split into 20-min chunks with `ffmpeg -c copy -segment_time 1200`.
+→ Split into 15-min chunks with `ffmpeg -c copy -segment_time 900`, keeping the source extension (`-c copy` into a different container fails).
 → Anything over 24MB is now rejected locally before upload, with that exact command printed.
 
 ### 5. Silent failures (exit code)

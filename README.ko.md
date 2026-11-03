@@ -36,7 +36,7 @@ flowchart LR
     B --> C["MP3 저장<br/>head -c3 = ID3"]
     C --> D{"24MB 초과?"}
     D -- 아니오 --> E["groq_transcribe.py"]
-    D -- 예 --> S["ffmpeg -c copy<br/>-segment_time 1200"]
+    D -- 예 --> S["ffmpeg -c copy<br/>-segment_time 900"]
     S --> E
     E --> F["Groq Whisper<br/>whisper-large-v3-turbo"]
     F --> G["transcripts/*.txt"]
@@ -124,7 +124,7 @@ Groq 세션 저하 또는 15MB 초과 파일에서 발생.
 
 ### 4. 25MB Groq 제한
 Plaud 코드 약 0.23MB/분 → 파일당 약 109분 한계.
-→ `ffmpeg -c copy -segment_time 1200`로 20분 청크 분할.
+→ `ffmpeg -c copy -segment_time 900`로 15분 청크 분할. 확장자는 원본 그대로 둡니다(`-c copy`로 컨테이너를 바꾸면 실패).
 → 24MB를 넘는 파일은 업로드 전에 로컬에서 거부하고 위 분할 명령을 그대로 출력합니다.
 
 ### 5. 조용한 실패 (종료 코드)

@@ -41,9 +41,10 @@ def transcribe(audio_path, out_path=None, model=None, language=None):
         stem = os.path.splitext(os.path.basename(audio_path))[0]
         print(f"ERR: {size_mb:.1f}MB — Groq 단일 요청 한도는 25MB (권장 {MAX_MB}MB 이하)")
         print("먼저 분할한 뒤 각 청크를 전사하세요:")
-        print(f"  ffmpeg -i '{audio_path}' -c copy -segment_time 1200 "
-              f"-f segment 'transcripts/{stem}_%03d.mp3'")
-        print(f"  for f in transcripts/{stem}_*.mp3; do python3 groq_transcribe.py \"$f\"; done")
+        ext = os.path.splitext(audio_path)[1].lstrip(".").lower() or "mp3"
+        print(f"  ffmpeg -i '{audio_path}' -c copy -segment_time 900 "
+              f"-f segment 'transcripts/{stem}_%03d.{ext}'")
+        print(f"  for f in transcripts/{stem}_*.{ext}; do python3 groq_transcribe.py \"$f\"; done")
         return None
 
     with open(audio_path, "rb") as af:
@@ -57,8 +58,11 @@ def transcribe(audio_path, out_path=None, model=None, language=None):
 
     boundary = "----groq" + str(os.getpid())
     body = b""
-    fields = [("model", model), ("temperature", "0"),
-              ("response_format", "json"), ("language", language)]
+    fields = [("model", model), ("temperature", "0"), ("response_format", "json")]
+    if language:
+        # --language= (empty) means auto-detect: omit the field rather than send
+        # an empty string, which Groq may reject as malformed.
+        fields.append(("language", language))
     for name, val in fields:
         body += f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n".encode()
         body += val.encode() + b"\r\n"

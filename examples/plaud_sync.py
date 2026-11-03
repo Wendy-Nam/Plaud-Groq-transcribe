@@ -77,7 +77,9 @@ def main():
         print(f"ERR: Failed to fetch recordings: {e}", file=sys.stderr)
         return 1
 
-    new_files = [f for f in files if f.get("id") not in seen_ids]
+    # A recording with no id cannot be tracked in the state file; skipping it is
+    # safer than letting None into seen_ids, which would disable every future run.
+    new_files = [f for f in files if f.get("id") and f.get("id") not in seen_ids]
     print(f"Total found: {len(files)}, New un-synced: {len(new_files)}")
 
     if args.dry_run:
@@ -131,6 +133,9 @@ def main():
         json.dump({"processed": list(seen_ids), "updated_at": datetime.now(timezone.utc).isoformat()}, f, indent=2)
 
     print(f"Done. Successfully processed {processed_count} recording(s).")
+    if new_files and processed_count == 0:
+        print("ERR: nothing was transcribed — see the errors above", file=sys.stderr)
+        return 1
     return 0
 
 
