@@ -1,4 +1,15 @@
+<p align="center">
+  <img src="assets/hero.svg" alt="Plaud to Groq Whisper: voice in, text out" width="100%">
+</p>
+
 # Plaud-Groq-Transcribe
+
+<p align="left">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
+  <img src="https://img.shields.io/badge/python-3.8%2B-3776AB.svg" alt="Python 3.8+">
+  <img src="https://img.shields.io/badge/dependencies-0-brightgreen.svg" alt="No dependencies">
+  <img src="https://img.shields.io/badge/PRs-welcome-ff69b4.svg" alt="PRs welcome">
+</p>
 
 **Plaud 음성 녹음기를 Groq Whisper로 자동 전사하는 파이프라인.** 회의·코칭·인터뷰 녹음을 한국어로 텍스트화하고, 필요 시 Google Drive에 저장합니다.
 
@@ -20,13 +31,20 @@
 
 ## 구조
 
+```mermaid
+flowchart LR
+    A["Plaud 녹음기<br/>list_files"] --> B["presigned URL<br/>1,700자 이상"]
+    B --> C["MP3 저장<br/>head -c3 = ID3"]
+    C --> D{"24MB 초과?"}
+    D -- 아니오 --> E["groq_transcribe.py"]
+    D -- 예 --> S["ffmpeg -c copy<br/>-segment_time 1200"]
+    S --> E
+    E --> F["Groq Whisper<br/>whisper-large-v3-turbo"]
+    F --> G["transcripts/*.txt"]
+    G -. 선택 .-> H["Google Drive"]
 ```
-Plaud (list_files) → presigned_url → MP3 다운로드
-        ↓
-Groq Whisper (large-v3)  ← presigned URL 오염 주의
-        ↓
-전사 텍스트 (.txt) → (선택) Google Drive
-```
+
+위 경로에서 깨질 수 있는 지점은 아래 함정 항목에 전부 정리되어 있습니다.
 
 ---
 
@@ -45,7 +63,7 @@ export GROQ_API_KEY="gsk_..."
 
 ### 준비
 ```bash
-mkdir -p transcripts    # 전사본 저장 폴더 (필수 — 없으면 ENOENT)
+mkdir -p transcripts    # 선택 — 스크립트가 없으면 자동 생성합니다
 ```
 
 ### 파일 1개 전사 (기본 = 빠른 모델)

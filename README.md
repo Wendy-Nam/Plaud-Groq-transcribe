@@ -1,4 +1,15 @@
+<p align="center">
+  <img src="assets/hero.svg" alt="Plaud to Groq Whisper: voice in, text out" width="100%">
+</p>
+
 # Plaud-Groq-Transcribe
+
+<p align="left">
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
+  <img src="https://img.shields.io/badge/python-3.8%2B-3776AB.svg" alt="Python 3.8+">
+  <img src="https://img.shields.io/badge/dependencies-0-brightgreen.svg" alt="No dependencies">
+  <img src="https://img.shields.io/badge/PRs-welcome-ff69b4.svg" alt="PRs welcome">
+</p>
 
 **Automatically transcribe Plaud voice recordings using Groq Whisper.** Turn meetings, coaching sessions, and interviews into text — free, Korean-friendly, and production-tested.
 
@@ -36,13 +47,20 @@ Output is saved to `transcripts/<basename>.txt`.
 
 ## Pipeline
 
+```mermaid
+flowchart LR
+    A["Plaud recorder<br/>list_files"] --> B["Presigned URL<br/>1,700+ chars"]
+    B --> C["MP3 on disk<br/>head -c3 shows ID3"]
+    C --> D{"File over 24 MB?"}
+    D -- no --> E["groq_transcribe.py"]
+    D -- yes --> S["ffmpeg -c copy<br/>-segment_time 1200"]
+    S --> E
+    E --> F["Groq Whisper<br/>whisper-large-v3-turbo"]
+    F --> G["transcripts/*.txt"]
+    G -. optional .-> H["Google Drive"]
 ```
-Plaud (list_files) → presigned_url → download MP3
-        ↓
-Groq Whisper (large-v3)  ← watch for presigned URL poisoning
-        ↓
-Transcript text (.txt) → (optional) Google Drive
-```
+
+Groq downloads the file and returns JSON; the script writes plain text and stops. Everything that can break between those two points is listed under [Common pitfalls](#common-pitfalls-solved).
 
 ---
 
