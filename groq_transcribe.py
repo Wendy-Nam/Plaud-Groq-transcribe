@@ -3,11 +3,13 @@
 Cloudflare UA 차단(403 error code 1010)을 회피하는 User-Agent를 포함합니다.
 
 Usage:
-    GROQ_API_KEY=... python3 groq_transcribe.py <audio_path> [out_path] [model]
+    GROQ_API_KEY=... python3 groq_transcribe.py <audio_path> [out_path] [model] [--model=x] [--language=ko]
 
 Defaults:
     out_path = ./transcripts/<basename>.txt  (디렉터리는 자동 생성)
     model    = whisper-large-v3-turbo        (정확도 우선 시 whisper-large-v3)
+    language = ko                            (영어 오디오는 --language=en, 자동 감지는 --language=)
+    env      = GROQ_MODEL / GROQ_LANGUAGE 로도 지정 가능 (플래그가 우선)
 
 Exit status:
     0 = 전사본 저장 완료, 1 = 실패 (콘솔 메시지 + 이 종료 코드로 판별)
@@ -15,8 +17,16 @@ Exit status:
 import os, sys, json, urllib.request, urllib.error
 
 API_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
+CONTENT_TYPES = {
+    "mp3": "audio/mpeg", "mpga": "audio/mpeg", "m4a": "audio/mp4",
+    "mp4": "audio/mp4", "wav": "audio/wav", "ogg": "audio/ogg",
+    "flac": "audio/flac", "webm": "audio/webm",
+}
 
-def transcribe(audio_path, out_path=None, model="whisper-large-v3-turbo", language="ko"):
+def transcribe(audio_path, out_path=None, model=None, language=None):
+    model = model or os.environ.get("GROQ_MODEL", "").strip() or "whisper-large-v3-turbo"
+    language = "ko" if language is None else language
+    language = language or os.environ.get("GROQ_LANGUAGE", "").strip()
     key = os.environ.get("GROQ_API_KEY", "").strip()
     if not key:
         raise SystemExit("ERR: GROQ_API_KEY 환경변수 없음")
@@ -40,7 +50,9 @@ def transcribe(audio_path, out_path=None, model="whisper-large-v3-turbo", langua
         body += val.encode() + b"\r\n"
     fname = os.path.basename(audio_path)
     body += f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{fname}\"\r\n".encode()
-    body += b"Content-Type: audio/mpeg\r\n\r\n" + fbytes + b"\r\n"
+    ext = os.path.splitext(fname)[1].lstrip(".").lower()
+    ctype = CONTENT_TYPES.get(ext, "audio/mpeg")
+    body += f"Content-Type: {ctype}\r\n\r\n".encode() + fbytes + b"\r\n"
     body += f"--{boundary}--\r\n".encode()
 
     headers = {
@@ -73,9 +85,23 @@ def transcribe(audio_path, out_path=None, model="whisper-large-v3-turbo", langua
         return None
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    opts, positional = {}, []
+    for arg in sys.argv[1:]:
+        if arg.startswith("--") and "=" in arg:
+            k, v = arg[2:].split("=", 1)
+            opts[k] = v
+        elif arg.startswith("--"):
+            print(f"ERR: 플래그는 --key=value 형식만 지원합니다: {arg}")
+            sys.exit(1)
+        else:
+            positional.append(arg)
+    if not positional:
         print(__doc__)
         sys.exit(1)
-    text = transcribe(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None,
-                      sys.argv[3] if len(sys.argv) > 3 else "whisper-large-v3-turbo")
+    text = transcribe(
+        positional[0],
+        positional[1] if len(positional) > 1 else None,
+        opts.get("model") or (positional[2] if len(positional) > 2 else None),
+        opts["language"] if "language" in opts else None,
+    )
     sys.exit(0 if text is not None else 1)
