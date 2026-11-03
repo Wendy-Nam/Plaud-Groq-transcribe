@@ -6,8 +6,11 @@ Usage:
     GROQ_API_KEY=... python3 groq_transcribe.py <audio_path> [out_path] [model]
 
 Defaults:
-    out_path = ./transcripts/<basename>.txt  (먼저 mkdir -p transcripts)
+    out_path = ./transcripts/<basename>.txt  (디렉터리는 자동 생성)
     model    = whisper-large-v3-turbo        (정확도 우선 시 whisper-large-v3)
+
+Exit status:
+    0 = 전사본 저장 완료, 1 = 실패 (콘솔 메시지 + 이 종료 코드로 판별)
 """
 import os, sys, json, urllib.request, urllib.error
 
@@ -54,6 +57,9 @@ def transcribe(audio_path, out_path=None, model="whisper-large-v3-turbo", langua
         with urllib.request.urlopen(req, timeout=300) as r:
             raw = r.read().decode("utf-8")
         text = json.loads(raw).get("text", "")
+        if not text.strip():
+            print("실패: 빈 전사 결과 (파일 미저장) — 잠시 후 재시도하거나 분할하세요")
+            return None
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(text)
         print(f"전사 성공: {len(text)}자")
@@ -70,5 +76,6 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
-    transcribe(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None,
-               sys.argv[3] if len(sys.argv) > 3 else "whisper-large-v3-turbo")
+    text = transcribe(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None,
+                      sys.argv[3] if len(sys.argv) > 3 else "whisper-large-v3-turbo")
+    sys.exit(0 if text is not None else 1)
