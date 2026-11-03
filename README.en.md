@@ -77,6 +77,11 @@ python3 groq_transcribe.py meeting.mp3
 python3 groq_transcribe.py lecture.mp3 ./out/lecture.txt whisper-large-v3
 ```
 
+### Non-Korean audio (language defaults to ko)
+```bash
+python3 groq_transcribe.py interview.mp3 --language=en
+```
+
 ### Example run (real input/output)
 
 Input: `/audio/coaching1.mp3` (4.6MB / 14 min)
@@ -120,6 +125,11 @@ The audio-upload endpoint blocks the default `urllib` User-Agent. → Set a brow
 ### 4. 25MB Groq limit
 Plaud codec ≈ 0.23MB/min → ~109 min/file cap.
 → Split into 20-min chunks with `ffmpeg -c copy -segment_time 1200`.
+→ Anything over 24MB is now rejected locally before upload, with that exact command printed.
+
+### 5. Silent failures (exit code)
+The script used to exit **0** even when Groq errored, so cron and CI saw success.
+→ It now exits **1** on HTTP errors, files over 24MB, and empty transcripts. `if ! python3 groq_transcribe.py x.mp3; then ...` works.
 
 ---
 
