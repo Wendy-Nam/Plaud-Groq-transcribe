@@ -23,7 +23,7 @@
 - **Korean-accurate** — Sets `language="ko"` for accurate transcription of Korean meetings, coaching, and interviews.
 - **Simple** — Pure Python standard library (no `requests` needed). One-line setup.
 - **Battle-tested workarounds included** — handles presigned-URL poisoning, Cloudflare blocking, and file-size limits that most tutorials skip.
-- **Extensible** — auto-splits >25MB audio and can upload results to Google Drive.
+- **Extensible** — split >24 MB audio with `ffmpeg` (see pitfalls) and upload results to Google Drive.
 
 In short: **a "record → text, instantly" meeting/coaching/interview log tool.**
 

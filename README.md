@@ -24,7 +24,7 @@
 - **Korean-accurate** — `language="ko"` for accurate Korean meetings/coaching/interviews.
 - **Simple** — Pure Python standard library (no `requests` required). One-line setup.
 - **Battle-tested workarounds included** — handles the presigned-URL poisoning and Cloudflare blocks that most tutorials skip.
-- **Extensible** — auto-splits >25MB files and can upload results to Google Drive.
+- **Extensible** — split >24 MB files with `ffmpeg` (see pitfalls) and upload results to Google Drive.
 
 ---
 
