@@ -123,6 +123,19 @@ Plaud codec ≈ 0.23MB/min → ~109 min/file cap.
 
 ---
 
+## Use with AI agents
+
+This repo ships an [Agent Skill](https://agentskills.io) at `.agents/skills/plaud-transcribe/`. Point your coding agent at it and it can run the whole pipeline, including the parts the script does not enforce.
+
+| Agent | Where skills are read from | Install |
+| --- | --- | --- |
+| Claude Code | `~/.claude/skills/` (or `.claude/skills/` in the repo) | `cp -r .agents/skills/plaud-transcribe ~/.claude/skills/` |
+| OpenAI Codex | `$CODEX_HOME/skills` (default `~/.codex/skills`) | `cp -r .agents/skills/plaud-transcribe "${CODEX_HOME:-$HOME/.codex}/skills/"` |
+| OpenClaw | `.agents/skills/` in the repo, plus `~/.openclaw/skills/` | use it in place, or copy to `~/.openclaw/skills/` |
+| Hermes Agent | `~/.hermes/skills/` | `cp -r .agents/skills/plaud-transcribe ~/.hermes/skills/` |
+
+The skill exists because three things are easy to get wrong and the 74-line script cannot catch them: the 24 MB upload guard is not implemented, `language="ko"` is hard-coded with no CLI flag, and the script prints an error but still exits `0` when Groq fails. The skill tells the agent to verify the transcript file instead of trusting the exit code.
+
 ## License
 MIT
 

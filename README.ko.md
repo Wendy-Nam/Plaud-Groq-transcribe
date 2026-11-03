@@ -123,6 +123,19 @@ Plaud 코드 약 0.23MB/분 → 파일당 약 109분 한계.
 
 ---
 
+## AI 에이전트와 함께 쓰기
+
+이 저장소에는 [Agent Skill](https://agentskills.io) 규격의 스킬이 `.agents/skills/plaud-transcribe/`에 들어 있습니다. 에이전트에게 이 폴더를 물려주면 파이프라인 전체를 알아서 돌립니다.
+
+| 에이전트 | 스킬을 읽는 위치 | 설치 |
+| --- | --- | --- |
+| Claude Code | `~/.claude/skills/` (저장소 안이면 `.claude/skills/`) | `cp -r .agents/skills/plaud-transcribe ~/.claude/skills/` |
+| OpenAI Codex | `$CODEX_HOME/skills` (기본 `~/.codex/skills`) | `cp -r .agents/skills/plaud-transcribe "${CODEX_HOME:-$HOME/.codex}/skills/"` |
+| OpenClaw | 저장소의 `.agents/skills/` 자동 인식, `~/.openclaw/skills/` | 그대로 쓰거나 `~/.openclaw/skills/`로 복사 |
+| Hermes Agent | `~/.hermes/skills/` | `cp -r .agents/skills/plaud-transcribe ~/.hermes/skills/` |
+
+스킬이 필요한 이유는 스크립트가 잡아주지 못하는 세 가지 때문입니다. 24MB 초과 검사가 없고, `language="ko"`가 하드코딩돼 CLI 플래그가 없으며, Groq가 실패해도 종료 코드가 `0`으로 나옵니다. 그래서 스킬은 종료 코드 대신 전사 파일을 검증하라고 지시합니다.
+
 ## 라이선스
 MIT
 
