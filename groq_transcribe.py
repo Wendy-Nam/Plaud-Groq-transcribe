@@ -27,8 +27,9 @@ CONTENT_TYPES = {
 
 def transcribe(audio_path, out_path=None, model=None, language=None):
     model = model or os.environ.get("GROQ_MODEL", "").strip() or "whisper-large-v3-turbo"
-    language = "ko" if language is None else language
-    language = language or os.environ.get("GROQ_LANGUAGE", "").strip()
+    language = language if language is not None else (
+        os.environ.get("GROQ_LANGUAGE", "").strip() or "ko"
+    )
     key = os.environ.get("GROQ_API_KEY", "").strip()
     if not key:
         raise SystemExit("ERR: GROQ_API_KEY 환경변수 없음")
@@ -45,7 +46,8 @@ def transcribe(audio_path, out_path=None, model=None, language=None):
         print(f"  for f in transcripts/{stem}_*.mp3; do python3 groq_transcribe.py \"$f\"; done")
         return None
 
-    fbytes = open(audio_path, "rb").read()
+    with open(audio_path, "rb") as af:
+        fbytes = af.read()
     print(f"오디오 크기: {len(fbytes)} bytes")
 
     if out_path is None:

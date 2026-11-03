@@ -5,7 +5,6 @@
 # Plaud-Groq-Transcribe
 
 <p align="left">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
   <img src="https://img.shields.io/badge/python-3.8%2B-3776AB.svg" alt="Python 3.8+">
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen.svg" alt="No dependencies">
   <img src="https://img.shields.io/badge/PRs-welcome-ff69b4.svg" alt="PRs welcome">
@@ -145,10 +144,10 @@ Plaud 코드 약 0.23MB/분 → 파일당 약 109분 한계.
 | OpenClaw | 저장소의 `.agents/skills/` 자동 인식, `~/.openclaw/skills/` | 그대로 쓰거나 `~/.openclaw/skills/`로 복사 |
 | Hermes Agent | `~/.hermes/skills/` | `cp -r .agents/skills/plaud-transcribe ~/.hermes/skills/` |
 
-스킬이 필요한 이유는 스크립트가 잡아주지 못하는 세 가지 때문입니다. 24MB 초과 검사가 없고, `language="ko"`가 하드코딩돼 CLI 플래그가 없으며, Groq가 실패해도 종료 코드가 `0`으로 나옵니다. 그래서 스킬은 종료 코드 대신 전사 파일을 검증하라고 지시합니다.
+스킬은 스크립트 바깥에서 여전히 필요한 세 가지를 담당합니다. Groq 요청 한도를 넘는 파일을 나누는 일, 업로드가 거부할 컨테이너를 변환하는 일, 종료 코드만 믿지 않고 전사 파일이 실제로 비어 있지 않은지 확인하는 일입니다.
 
 ## 라이선스
-MIT
+아직 `LICENSE` 파일이 없어 기본 저작권(모든 권리 유보)이 적용됩니다. 라이선스 선택은 메인테이너 몫이며 이 PR에서 바꾸지 않습니다.
 
 ## 면책
 개인 사용 목적으로 개발. Plaud·Groq 공식 제품 아님.

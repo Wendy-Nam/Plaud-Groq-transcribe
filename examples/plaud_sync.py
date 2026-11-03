@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""examples/plaud_sync.py — Plaud Cloud API to Groq Whisper pipeline.
+"""examples/plaud_sync.py — Reference pipeline for syncing Plaud recordings.
 
-Polls the Plaud developer API for new recordings, downloads audio,
-transcribes via groq_transcribe.py, and tracks processed files locally.
+Demonstrates polling audio recordings, downloading audio files, transcribing
+via groq_transcribe.py, and tracking processed files in a local state JSON.
+
+Note: Plaud's open API specifications and official tooling are evolving
+(e.g., Plaud CLI / MCP at https://docs.plaud.ai). This script serves as a
+reference automation template and should be adapted to your account setup.
 
 Requirements:
     export PLAUD_ACCESS_TOKEN="your_plaud_access_token"
@@ -100,10 +104,11 @@ def main():
             continue
 
         out_txt = os.path.join(args.out_dir, f"{fname}.txt")
+        script = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "groq_transcribe.py")
         print(f"→ Transcribing with groq_transcribe.py...")
         ret = subprocess.run([
             sys.executable,
-            "groq_transcribe.py",
+            os.path.abspath(script),
             tmp_audio,
             out_txt,
             f"--language={args.language}"

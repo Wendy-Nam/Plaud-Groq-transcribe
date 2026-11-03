@@ -23,16 +23,23 @@ NAME="$(basename "${AUDIO%.*}")"
 WORK="transcripts/$NAME"
 mkdir -p "$WORK"
 
-# 24MB at Plaud's ~0.23MB/min is well over an hour, so 20 minutes per chunk is
-# the safe default that also keeps each request comfortably under the limit.
-SEGMENT="${SEGMENT_SECONDS:-1200}"
+EXT="$(echo "${AUDIO##*.}" | tr '[:upper:]' '[:lower:]')"
+
+# Groq's per-request limit is 25MB (free tier) and its Whisper endpoint degrades on
+# very long inputs, so 15 minutes per chunk is the default: safely under the limit
+# for typical speech bitrates and inside the 10-15 minute window the fail table below
+# recommends. Override with SEGMENT_SECONDS when the source bitrate is high.
+SEGMENT="${SEGMENT_SECONDS:-900}"
 
 echo "splitting $AUDIO into ${SEGMENT}s chunks -> $WORK"
+# -c copy only works when the chunk container matches the source codec. Keep the
+# source extension so an m4a/webm input still produces playable chunks; the script
+# sets Content-Type from the extension, so mixed containers upload fine.
 ffmpeg -y -loglevel error -i "$AUDIO" -c copy \
-  -segment_time "$SEGMENT" -f segment "$WORK/chunk_%03d.mp3"
+  -segment_time "$SEGMENT" -f segment "$WORK/chunk_%03d.$EXT"
 
 shopt -s nullglob
-chunks=("$WORK"/chunk_*.mp3)
+chunks=("$WORK"/chunk_*."$EXT")
 [ ${#chunks[@]} -gt 0 ] || { echo "ERR: ffmpeg produced no chunks" >&2; exit 1; }
 
 merged="$WORK/$NAME.txt"

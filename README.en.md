@@ -5,7 +5,6 @@
 # Plaud-Groq-Transcribe
 
 <p align="left">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT">
   <img src="https://img.shields.io/badge/python-3.8%2B-3776AB.svg" alt="Python 3.8+">
   <img src="https://img.shields.io/badge/dependencies-0-brightgreen.svg" alt="No dependencies">
   <img src="https://img.shields.io/badge/PRs-welcome-ff69b4.svg" alt="PRs welcome">
@@ -144,10 +143,10 @@ This repo ships an [Agent Skill](https://agentskills.io) at `.agents/skills/plau
 | OpenClaw | `.agents/skills/` in the repo, plus `~/.openclaw/skills/` | use it in place, or copy to `~/.openclaw/skills/` |
 | Hermes Agent | `~/.hermes/skills/` | `cp -r .agents/skills/plaud-transcribe ~/.hermes/skills/` |
 
-The skill exists because three things are easy to get wrong and the 74-line script cannot catch them: the 24 MB upload guard is not implemented, `language="ko"` is hard-coded with no CLI flag, and the script prints an error but still exits `0` when Groq fails. The skill tells the agent to verify the transcript file instead of trusting the exit code.
+The skill covers the three things a wrapper still has to do around the script: split files that exceed Groq's per-request limit, convert containers the upload would otherwise reject, and check that the transcript file is actually non-empty instead of trusting the exit code alone.
 
 ## License
-MIT
+This repository has no `LICENSE` file yet, so the default all-rights-reserved applies. Adding one is the maintainer's call and is not part of this PR.
 
 ## Disclaimer
 Built for personal use. Not an official Plaud or Groq product.
