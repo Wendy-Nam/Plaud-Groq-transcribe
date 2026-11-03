@@ -14,3 +14,5 @@ processed.txt
 # 로컬 작업 파일
 *.tmp
 .git/
+__pycache__/
+*.pyc
